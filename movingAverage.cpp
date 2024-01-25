@@ -1,4 +1,5 @@
 //moving average
+
 #include <vector>
 #include <iostream>
 using namespace std;
