@@ -1,0 +1,13 @@
+*.exe
+.DS_Store
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+*.vscode
+*.dSYM
