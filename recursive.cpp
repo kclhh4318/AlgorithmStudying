@@ -24,4 +24,5 @@ void pick(int n, vector<int>& picked, int toPick){
     if(toPick == 0) {printPicked(picked); return;}
     //고를 수 있는 가장 작은 번호를 계산한다.
     int smallest = picked.empty() ? 0 : picked.back() + 1;
+    
 }
