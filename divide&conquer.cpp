@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <algorithm>
+#include <string>
+#include <cmath>
 
 //필수 조건: n은 자연수
 //1 + 2 + ... + n을 반환한다.
