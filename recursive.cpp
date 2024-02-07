@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <algorithm>
 
 //필수 조선: n >= 1
 //결과: 1부터 n까지의 합을 반환한다.
