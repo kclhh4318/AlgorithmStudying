@@ -314,3 +314,201 @@ double search3(int here, int days){
             ret += search3(there, days - 1) / deg[there];
     return ret;
 }
+
+int n;
+int cache[101], S[100], choices[101];
+//S[start]에서 시작하는 증가 부분 수열 중 최대 길이를 반환한다.
+int lis4(int start){
+    int& ret = cache[start + 1];
+    if(ret != -1) return ret;
+    //항상 S[start]는 있기 때문에 길이는 최하 1
+    ret = 1;
+    int bestNext = -1;
+    for(int next = start + 1; next < n; ++next)
+        if(start == -1 || S[start] < S[next]){
+            int cand = lis4(next) + 1;
+            if(cand > ret){
+                ret = cand;
+                bestNext = next;
+            }
+        }
+    choices[start + 1] = bestNext;
+    return ret;
+}
+//S[start]에서 시작하는 LIS 를 seq에 저장한다.
+void reconstruct(int start, vector<int>& seq){
+    if(start != -1) seq.push_back(S[start]);
+    int next = choices[start + 1];
+    if(next != -1) reconstruct(next, seq);
+}
+
+int n, capacity;
+int volume[100], need[100];
+int cache[1001][100];
+string name[100];
+//캐리어에 남은 용량이 capacity일 때, item 이후의 물건들을
+//담아 얻을 수 있는 최대 절박도의 합을 반환한다.
+int pack(int capacity, int item){
+    //기저 사례: 더 담을 물건이 없을 때
+    if(item == n) return 0;
+    int& ret = cache[capacity][item];
+    if(ret != -1) return ret;
+    //이 물건을 담지 않을 경우
+    ret = pack(capacity, item + 1);
+    //이 물건을 담을 경우
+    if(capacity >= volume[item])
+        ret = max(ret, pack(capacity - volume[item], item + 1) + need[item]);
+    return ret;
+}
+
+//pack(capacity, item)이 선택한 물건들의 목록을 picked에 저장한다.
+void reconstruct(int capacity, int item, vector<string>& picked){
+    //기저 사례: 모든 물건을 다 고려했음
+    if(item == n) return;
+    if(pack(capacity, item) == pack(capacity, item + 1)){
+        reconstruct(capacity, item + 1, picked);
+    }
+    else{
+        picked.push_back(name[item]);
+        reconstruct(capacity - volume[item], item + 1, picked);
+    }
+}
+
+int n, m;
+//분류기가 반환한 문장. 단어 번호로 변환되어 있음
+int R[100];
+//T[i][j] = i 단어 이후에 j단어가 나올 확률의 로그 값
+double T[501][501];
+//M[i][j] = i 단어가 j단어로 분류될 확률의 로그 값
+double M[501][501];
+int choice[102][502];
+double cache[102][502]; // 1로 초기화한다.
+
+//Q[segment] 이후를 채워서 얻을 수 있는 최대 g() 곱의 로그 값을 반환한다.
+//Q[segment - 1] == previousMatch라고 가정한다.
+double recognize(int segment; int previousMatch){
+    if(segment == n) return 0;
+    doublt& ret = cache[segment][previousMatch];
+    if(ret != 1.0) return ret;
+    ret = -1e200; //log(0) = 음의 무한대에 해당하는 값
+    int& choose = choice[segment][previousMatch];
+    //R[segment]에 대응되는 단어를 찾는다.
+    for(int thisMatch = 0; thisMatch < m; ++thisMatch){
+        //g(thisMatch) = T(previoiusMatch, thisMatch) * M(thisMatch, R[segment])
+        double cand = T[previousMatch][thisMatch]; + M[thisMatch][R[segment]] + recognize(segment + 1, thisMatch);
+        if(cand > ret){
+            ret = cand;
+            choose = thisMatch;
+        }
+    }
+    return ret;
+}
+
+//입력받은 단어들의 목록
+string corpus[501];
+string reconstruct(int segment, int previousMatch){
+    int choose = choice[segment][previousMatch];
+    string ret = corpus[choose];
+    if(segment < n - 1)
+        ret = ret + " " + reconstruct(segment + 1, choose);
+    return ret;
+}
+
+//s: 지금까지 만든 신호
+//n: 더 필요한 -의 개수
+//m: 더 피룡한 o의 개수
+void generate(int n, int m, string s){
+    //기저 사레: n = m = 0
+    if(n == 0 && m == 0){
+        cout << s << endl;
+        return;
+    }
+    if(n > 0) generate(n - 1, m, s + "-");
+    if(m > 0) generate(n, m - 1, s + "o");
+}
+
+int skip; //k - 1로 초기화
+//skip개를 건너뛰고 출력한다.
+void generate2(int n, int m, string s){
+    //기저 사례: skip < 0
+    if(skip < 0) return;
+    //기저 사레: n = m = 0
+    if(n == 0 && m == 0){
+        //더 건너뛸 신호가 없는 경우
+        if(skip == 0) cout << s << endl;
+        --skip;
+        return;
+    }
+    if(n > 0) generate2(n - 1, m, s + "-");
+    if(m > 0) generate2(n, m - 1, s + "o");
+}
+
+//K의 최대값 + 100. 오버플로를 막기 위해 이보다 큰 값은 구하지 않는다.
+const int M = 1000000000000 + 100;
+int bino[201][201];
+//필요한 모든 이항계수를 미리 계산해 둔다.
+void calcBino(){
+    memset(bino, 0, sizeof(bino));
+    for(int i = 0; i <= 200; ++i){
+        bino[i][0] = bino[i][i] = 1;
+        for(int j = 1; j < i; ++j)
+            bino[i][j] = min(M, bino[i - 1][j - 1] + bino[i - 1][j]);
+    }
+}
+//skip개를 건너뛰고 출력한다.
+void generate3(int n, int m, string s){
+    //기저 사레: skip < 0
+    if(skip < 0) return;
+    //기저 사례: n = m = 0
+    if(n == 0 && m == 0){
+        if(skip == 0) cout << s << endl;
+        --skip;
+        return;
+    }
+    if(bino[n + m][n] <= skip){
+        skip -= bino[n + m][n];
+        return;
+    }
+    if(n > 0) generate3(n - 1, m, s + "-");
+    if(m > 0) generate3(n, m - 1, s + "o");
+}
+
+//n개의 -, m개의 o으로 구성된 신호 중 skip개를 건너뛰고
+//만들어지는 신호를 반환한다.
+string kth(int n, int m, int skip){
+    //n == 0인 경우 나머지 부분은 전부 o일 수밖에 없다.
+    if(n == 0) return string(m, 'o');
+    if(skip < bino[n + m - 1][n - 1])
+        return "-" + kth(n - 1, m, skip);
+    return "o" + kth(n, m - 1, skip - bino[n + m - 1][n - 1]);
+}
+
+const int MAX = 2000000000000 + 1;
+int n;
+int cacheLen[501], cacheCnt[501], S[500];
+//S[start]에서 시작하는 증가 부분 수열 중 최대 길이를 반환한다.
+int lis(int start){
+    //메모이제이션
+    int& ret = cacheLen[start + 1];
+    if(ret != -1) return ret;
+    //항상 S[start]는 있기 때문에 길이는 최하 1
+    ret = 1;
+    for(int next = start + 1; next < n; ++next)
+        if(start == -1 || S[start] < S[next])
+            ret = max(ret, lis(next) + 1);
+    return ret;
+}
+//S[start]에서 시작하는 최대 증가 부분 수열의 수를 반환한다
+int count(int start){
+    //기저 사례: LIS의 길이가 1인 경우
+    if(lis(start) == 1) return 1;
+    //메모이제이션
+    int& ret = cacheCnt[start + 1];
+    if(ret != -1) return ret;
+    ret = 0;
+    for(int next = start + 1; next < n; ++next){
+        if((start == -1 || S[start] < S[next]) && lis(start) == lis(next) + 1)
+        ret = min <long long>(MAX, (long long)ret + count(next));
+    }
+    return ret;
+}
